@@ -8,25 +8,21 @@ import com.br.btgteste.domain.usecase.CurrencyListUseCase
 
 class ListCurrencyViewModel(private val currencyListUseCase: CurrencyListUseCase): ViewModel() {
 
-    var liveDataResponse: MutableLiveData<ApiResult<List<Currency>>> = MutableLiveData()
+    val liveDataResponse: MutableLiveData<ApiResult<List<Currency>>> = MutableLiveData()
 
     fun getCurrencies(){
-        currencyListUseCase.invoke { response ->
-            if (response is ApiResult.Success) { response.data = sortList(response.data) }
+        currencyListUseCase { response ->
+            if (response is ApiResult.Success) {
+                val sortedList = response.data.sortedBy { it.name }
+                response.data = sortedList
+            }
             liveDataResponse.value = response
         }
     }
-
-    private fun sortList(list: List<Currency>) = list.sortedBy { it.name }
 
     fun performFiltering(query: CharSequence, currenciesList: List<Currency>): List<Currency> {
         val filteredList = currenciesList.subList(0, currenciesList.size)
         return filteredList.filter {
             it.code.startsWith(query, true) || it.name.startsWith(query,true) }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        currencyListUseCase.unsubscribe()
     }
 }
